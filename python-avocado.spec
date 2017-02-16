@@ -24,7 +24,7 @@
 
 Name: python-%{srcname}
 Version: 46.0
-Release: 1%{?gitrel}%{?dist}
+Release: 2%{?gitrel}%{?dist}
 Summary: Framework with tools and libraries for Automated Testing
 Group: Development/Tools
 # Found licenses:
@@ -33,7 +33,7 @@ Group: Development/Tools
 # optional_plugins/html/avocado_result_html/resources/static/css/*: MIT
 # optional_plugins/html/avocado_result_html/resources/static/js/*: MIT
 # Other files: GPLv2 and GPLv2+
-License: GPLv2 and MIT and CC-BY-SA
+License: GPLv2 and MIT
 URL: http://avocado-framework.github.io/
 %if 0%{?rel_build}
 Source0: https://github.com/avocado-framework/%{srcname}/archive/%{version}.tar.gz#/%{gittar}
@@ -80,6 +80,9 @@ BuildRequires: python-unittest2
 BuildRequires: procps-ng
 %endif
 
+%if 0%{?fedora} == 24
+BuildRequires: python-crypto
+%endif
 %if 0%{?fedora} >= 25
 BuildRequires: kmod
 %endif
@@ -103,7 +106,6 @@ Requires: libvirt-python
 Requires: pyliblzma
 Requires: pystache
 Requires: python2
-Requires: python2-aexpect
 
 %if 0%{?rhel}
 Requires: python-requests
@@ -133,7 +135,6 @@ these days a framework) to perform automated testing.
 
 %package -n python2-%{srcname}-plugins-output-html
 Summary: Avocado HTML report plugin
-License: GPLv2 and MIT and CC-BY-SA
 %{?python_provide:%python_provide python2-%{srcname}-plugins-output-html}
 Requires: python2-%{srcname} == %{version}-%{release}
 Requires: pystache
@@ -142,6 +143,46 @@ Requires: pystache
 Adds to avocado the ability to generate an HTML report at every job results
 directory. It also gives the user the ability to write a report on an
 arbitrary filesystem location.
+
+
+%package -n python2-%{srcname}-plugins-runner-remote
+Summary: Avocado Runner for Remote Execution
+%{?python_provide:%python_provide python2-%{srcname}-plugins-runner-remote}
+Requires: python2-%{srcname} == %{version}-%{release}
+Requires: fabric
+%if 0%{?fedora} == 24
+Requires: python-crypto
+%endif
+
+%description -n python2-%{srcname}-plugins-runner-remote
+Allows Avocado to run jobs on a remote machine, by means of an SSH
+connection. Avocado must be previously installed on the remote machine.
+
+
+%package -n python2-%{srcname}-plugins-runner-vm
+Summary: Avocado Runner for libvirt VM Execution
+%{?python_provide:%python_provide python2-%{srcname}-plugins-runner-vm}
+Requires: python2-%{srcname} == %{version}-%{release}
+Requires: python2-%{srcname}-plugins-runner-remote == %{version}-%{release}
+Requires: libvirt-python
+
+%description -n python2-%{srcname}-plugins-runner-vm
+Allows Avocado to run jobs on a libvirt based VM, by means of
+interaction with a libvirt daemon and an SSH connection to the VM
+itself. Avocado must be previously installed on the VM.
+
+
+%package -n python2-%{srcname}-plugins-runner-docker
+Summary: Avocado Runner for Execution on Docker Containers
+%{?python_provide:%python_provide python2-%{srcname}-plugins-runner-docker}
+Requires: python2-%{srcname} == %{version}-%{release}
+Requires: python2-%{srcname}-plugins-runner-remote == %{version}-%{release}
+Requires: python2-aexpect
+
+%description -n python2-%{srcname}-plugins-runner-docker
+Allows Avocado to run jobs on a Docker container by interacting with a
+Docker daemon and attaching to the container itself. Avocado must
+be previously installed on the container.
 
 
 %package -n python-%{srcname}-examples
@@ -162,17 +203,39 @@ examples of how to write tests on your own.
 %else
 %setup -q -n %{srcname}-%{commit}
 %endif
+# package plugins-runner-vm requires libvirt-python, but the RPM
+# version of libvirt-python does not publish the egg info and this
+# causes that dep to be attempted to be installed by pip
+sed -e "s/'libvirt-python'//" -i optional_plugins/runner_vm/setup.py
 
 %build
 %{__python2} setup.py build
 pushd optional_plugins/html
 %{__python2} setup.py build
 popd
+pushd optional_plugins/runner_remote
+%{__python} setup.py build
+popd
+pushd optional_plugins/runner_vm
+%{__python} setup.py build
+popd
+pushd optional_plugins/runner_docker
+%{__python} setup.py build
+popd
 %{__make} man
 
 %install
 %{__python2} setup.py install --root %{buildroot} --skip-build
 pushd optional_plugins/html
+%{__python2} setup.py install --root %{buildroot} --skip-build
+popd
+pushd optional_plugins/runner_remote
+%{__python2} setup.py install --root %{buildroot} --skip-build
+popd
+pushd optional_plugins/runner_vm
+%{__python2} setup.py install --root %{buildroot} --skip-build
+popd
+pushd optional_plugins/runner_docker
 %{__python2} setup.py install --root %{buildroot} --skip-build
 popd
 %{__mkdir_p} %{buildroot}%{_mandir}/man1
@@ -187,6 +250,19 @@ find %{buildroot}%{_docdir}/avocado -type f -name '*.py' -exec %{__chmod} -c -x 
 
 %check
 %if %{with_tests}
+%{__python2} setup.py develop --user
+pushd optional_plugins/html
+%{__python2} setup.py develop --user
+popd
+pushd optional_plugins/runner_remote
+%{__python2} setup.py develop --user
+popd
+pushd optional_plugins/runner_vm
+%{__python2} setup.py develop --user
+popd
+pushd optional_plugins/runner_docker
+%{__python2} setup.py develop --user
+popd
 selftests/run
 %endif
 
@@ -230,12 +306,31 @@ selftests/run
 %{python2_sitelib}/avocado_result_html-%{version}-py%{python2_version}.egg-info
 
 
+%files -n python2-%{srcname}-plugins-runner-remote
+%{python2_sitelib}/avocado_runner_remote/
+%{python2_sitelib}/avocado_runner_remote-%{version}-py%{python2_version}.egg-info
+
+
+%files -n python2-%{srcname}-plugins-runner-vm
+%{python2_sitelib}/avocado_runner_vm/
+%{python2_sitelib}/avocado_runner_vm-%{version}-py%{python2_version}.egg-info
+
+
+%files -n python2-%{srcname}-plugins-runner-docker
+%{python2_sitelib}/avocado_runner_docker/
+%{python2_sitelib}/avocado_runner_docker-%{version}-py%{python2_version}.egg-info
+
+
 %files -n python-%{srcname}-examples
 %dir %{_docdir}/avocado
 %{_docdir}/avocado/tests
 %{_docdir}/avocado/wrappers
 
 %changelog
+* Thu Feb 16 2017 Merlin Mathesius <mmathesi@redhat.com> - 46.0-2
+- Incorporate upstream SPEC file changes to split plugins into subpackages.
+- Remove CC-BY-SA license, since that went away along with the halflings font.
+
 * Tue Feb 14 2017 Merlin Mathesius <mmathesi@redhat.com> - 46.0-1
 - Sync with upstream release 46.0.
 - Remove halflings license since font was removed from upstream.
