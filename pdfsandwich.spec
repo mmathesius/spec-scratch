@@ -8,7 +8,8 @@ Summary: A tool to make "sandwich" OCR pdf files
 License: GPLv2+
 URL: http://www.tobias-elze.de/pdfsandwich/
 
-Source0: http://downloads.sourceforge.net/%{name}/%{name}-%{version}.tar.bz2
+#Source0: http://downloads.sourceforge.net/%{srcname}/%{srcname}-%{version}.tar.bz2
+Source0: https://sourceforge.net/projects/%{srcname}/files/%{srcname}%20%{version}/%{srcname}-%{version}.tar.bz2/download#%/%{srcname}-%{version}.tar.bz2
 
 BuildRequires: ocaml
 BuildRequires: perl
