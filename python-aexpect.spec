@@ -28,7 +28,7 @@
 %endif
 
 Name: python-%{srcname}
-Version: 1.3.1
+Version: 1.4.0
 Release: 2%{?gitrel}%{?dist}
 Summary: A python library to control interactive applications
 Group: Development/Tools
@@ -97,17 +97,19 @@ PYTHON 3 SUPPORT IS CURRENTLY EXPERIMENTAL
 %endif
 
 %install
+%py2_install
+# move and symlink python2 version-specific executables
+mv %{buildroot}%{_bindir}/aexpect-helper %{buildroot}%{_bindir}/aexpect-helper-%{python2_version}
+ln -s aexpect-helper-%{python2_version} %{buildroot}%{_bindir}/aexpect-helper-2
+
 %if %{with_python3}
 %py3_install
-# move and symlink python3 executables
+# move and symlink python3 version-specific executables
 mv %{buildroot}%{_bindir}/aexpect-helper %{buildroot}%{_bindir}/aexpect-helper-%{python3_version}
 ln -s aexpect-helper-%{python3_version} %{buildroot}%{_bindir}/aexpect-helper-3
 %endif
 
-%py2_install
-# move and symlink python2 executables
-mv %{buildroot}%{_bindir}/aexpect-helper %{buildroot}%{_bindir}/aexpect-helper-%{python2_version}
-ln -s aexpect-helper-%{python2_version} %{buildroot}%{_bindir}/aexpect-helper-2
+# use python2 for unversioned executable
 ln -s aexpect-helper-%{python2_version} %{buildroot}%{_bindir}/aexpect-helper
 
 %check
@@ -133,9 +135,13 @@ selftests/checkall
 %endif
 
 %changelog
-* Thu Mar 30 2017 Merlin Mathesius <mmathesi@redhat.com> - 1.3.1-2
-- Provide python version-specific executables. (BZ#1437184)
+* Tue Apr 04 2017 Merlin Mathesius <mmathesi@redhat.com> - 1.4.0-2
+- Provide python3 version-specific executables. (BZ#1437184)
+
+* Tue Apr 04 2017 Merlin Mathesius <mmathesi@redhat.com> - 1.4.0-1
+- Sync with upstream release 1.4.0 (BZ#1438782).
 - Update source location to refer to new home.
+- Provide python2 version-specific executables.
 
 * Mon Feb 20 2017 Merlin Mathesius <mmathesi@redhat.com> - 1.3.1-1
 - Sync with upstream release 1.3.1 (BZ#1425027).
