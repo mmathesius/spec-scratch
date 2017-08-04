@@ -117,7 +117,7 @@ BuildRequires: kmod
 Avocado is a set of tools and libraries (what people call
 these days a framework) to perform automated testing.
 
-This is the LTS (Long Term Support) branch.
+This is the LTS (Long Term Stability) branch.
 
 
 %package -n python2-%{pkgname}
@@ -156,7 +156,7 @@ Requires: procps-ng
 Avocado is a set of tools and libraries (what people call
 these days a framework) to perform automated testing.
 
-This is the LTS (Long Term Support) branch.
+This is the LTS (Long Term Stability) branch.
 
 
 %package -n python2-%{pkgname}-plugins-output-html
@@ -414,5 +414,5 @@ find %{buildroot}%{_docdir}/avocado -type f -name '*.py' -exec %{__chmod} -c -x 
 
 
 %changelog
-* Wed Aug 02 2017 Merlin Mathesius <mmathesi@redhat.com> - 52.0-1
-- Initial packaging of LTS (Long Term Support) branch for Fedora.
+* Fri Aug 04 2017 Merlin Mathesius <mmathesi@redhat.com> - 52.0-1
+- Initial packaging of LTS (Long Term Stability) branch for Fedora.
